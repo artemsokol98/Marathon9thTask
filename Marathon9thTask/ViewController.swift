@@ -14,7 +14,7 @@ class ViewController: UIViewController, UICollectionViewDelegateFlowLayout {
 		let layout = UICollectionViewFlowLayout()
 		layout.scrollDirection = .horizontal
 		
-		let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout) // frame: .zero, collectionViewLayout: UICollectionViewFlowLayout.init()
+		let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
 		collectionView.dataSource = self
 		collectionView.delegate = self
 		collectionView.register(CollectionViewCell.self, forCellWithReuseIdentifier: CollectionViewCell.identifier)
@@ -28,21 +28,20 @@ class ViewController: UIViewController, UICollectionViewDelegateFlowLayout {
 		view.backgroundColor = .white
 		view.addSubview(collectionView)
 		title = "Collection"
-		
 
 	}
 	
-	override func viewWillLayoutSubviews() {
-		super.viewWillLayoutSubviews()
-		
-		collectionView.translatesAutoresizingMaskIntoConstraints = false
-		NSLayoutConstraint.activate([
-			   collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 200),
-			   collectionView.heightAnchor.constraint(equalTo: view.widthAnchor),
-			   collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-			   collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-		   ])
-	}
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor, constant: 200),
+            collectionView.heightAnchor.constraint(equalTo: view.widthAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
+    }
 
 	 
 }
@@ -59,7 +58,7 @@ extension ViewController: UICollectionViewDataSource {
 	}
 
 	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		return 9
+		return 19
 	}
 
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -74,29 +73,24 @@ extension ViewController: UICollectionViewDataSource {
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-		return UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        print(view.layoutMargins.left)
+        return UIEdgeInsets(top: 0, left: collectionView.layoutMargins.left, bottom: 0, right: collectionView.layoutMargins.right)
+        
 	}
 	
 	func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-		 var pageWidth = Float(200 + 30)
-		 var currentOffset = Float(scrollView.contentOffset.x)
-		 var targetOffset = Float(targetContentOffset.pointee.x)
-		 var newTargetOffset = Float(0)
+		collectionView.contentInset = UIEdgeInsets(top: 0, left: collectionView.layoutMargins.left, bottom: 0, right: collectionView.layoutMargins.right)
 
-		 if targetOffset > currentOffset {
-			 newTargetOffset = ceilf(currentOffset / pageWidth) * pageWidth
-		 } else {
-			 newTargetOffset = floorf(currentOffset / pageWidth) * pageWidth
-		 }
+		let target = targetContentOffset.pointee
+		let center = CGPoint(x: target.x + collectionView.bounds.width / 2, y: target.y + collectionView.bounds.height / 2)
+		guard let indexPath = collectionView.indexPathForItem(at: center) else { return }
+		guard let attributes = collectionView.layoutAttributesForItem(at: indexPath) else { return }
+		let itemSize = attributes.frame.size
+		let spacing = (collectionView.collectionViewLayout as? UICollectionViewFlowLayout)?.minimumLineSpacing ?? 0
 
-		 if newTargetOffset < 0 {
-			 newTargetOffset = 0
-		 } else if newTargetOffset > currentOffset {
-			 newTargetOffset = currentOffset
-		 }
-
-		 scrollView.setContentOffset(CGPointMake(CGFloat(newTargetOffset), 0), animated: true)
+        let pageWidth = (itemSize.width + spacing)
+        let itemIndex = (targetContentOffset.pointee.x) / pageWidth
+        targetContentOffset.pointee.x = round(itemIndex) * pageWidth - (spacing / 2)
+ 
 	}
-	
-	
 }
